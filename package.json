@@ -1,0 +1,29 @@
+{
+  "name": "talesludos-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "dotenv-safe": "^9.1.0",
+    "express": "^4.21.0",
+    "express-validator": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.2",
+    "mysql2": "^3.11.3",
+    "nodemailer": "^6.10.0",
+    "nodemon": "^3.1.7",
+    "sequelize": "^6.37.3",
+    "talesludos-api": "file:"
+  }
+}
