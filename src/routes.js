@@ -23,11 +23,8 @@ router.post('/contact', ContactController.submit);
 router.post('/auth/logout', verifyToken, AuthController.logout);
 
 // Rotas de Game
-router.post('/games', verifyToken, GameController.createGame);
-router.get('/games/:id', verifyToken, GameController.getGameById);
-router.put('/games/:id', verifyToken, GameController.updateGame);
-//router.get('/game/edit/:id', verifyToken, GameController.editGame);
-router.put('/game/update/:id', verifyToken, GameController.updateGame);
+router.get('/game/edit/:id', verifyToken, GameController.edit);
+router.put('/game/update/:id', verifyToken, GameController.update);
 
 // Rotas de Journey
 router.get('/journey/listall', JourneyController.listAll);
