@@ -1,19 +1,18 @@
 const fs = require('fs').promises;
 const path = require('path');
+const he = require('he');
 
 async function ensureDirectoryExists(dirPath) {
-    try {
-        await fs.access(dirPath);
-    } catch (error) {
-        await fs.mkdir(dirPath, { recursive: true });
-    }
+    const absPath = path.resolve(dirPath);   // garante absoluto, sem duplicar
+    await fs.mkdir(absPath, { recursive: true });
 }
 
 // Gerar index.html
 async function generateGameIndex({ folder, imageName }) {
-    const fullPath = path.join(__dirname, `../../${folder}`);
+    debugger
+    const fullPath = path.resolve(folder);
     await ensureDirectoryExists(fullPath);
-    
+
     const content = `
 <!DOCTYPE html>
 <html>
@@ -44,19 +43,18 @@ async function generateGameIndex({ folder, imageName }) {
 
 // Gerar game.js
 async function generateGameScript({ folder, title, description, marks, links, scenes, challenges }) {
-    const configPath = path.join(__dirname, `../../${folder}/config`);
+    const configPath = path.join(folder, 'config');   // ✅ não junta __dirname aqui
     await ensureDirectoryExists(configPath);
 
     const content = `
-var game = {
-    "title": "${title.replace(/"/g, '\\"')}",
-    "introduce": "${description.replace(/"/g, '\\"').replace(/\r|\n/g, '')}",
-    "marks": ${marks},
-    "links": ${links},
-    "scenes": ${scenes},
-    "challenges": ${challenges}
-}`;
-
+    var game = {
+        "title": "${title.replace(/"/g, '\\"')}",
+        "introduce": "${description.replace(/"/g, '\\"').replace(/\r|\n/g, '')}",
+        "marks": ${he.decode(marks)},
+        "links": ${he.decode(links)},
+        "scenes": ${he.decode(scenes)},
+        "challenges": ${he.decode(challenges)}
+    }`;
     await fs.writeFile(path.join(configPath, 'game.js'), content);
 }
 

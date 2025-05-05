@@ -7,18 +7,67 @@ class GameRepository {
     }
 
     async findById(id) {
-        return await Game.findByPk(id, {
-            include: [{ 
-                model: Journey, 
-                attributes: ['title', 'description', 'imagePath'] 
+        const game = await Game.findByPk(id, {
+            include: [{
+                model: Journey,
+                as: 'Journey',
+                attributes: ['title', 'description', 'imagePath', 'user_id']
             }]
         });
+        
+        if (game) {
+            return {
+                ...game.toJSON(),
+                marks: typeof game.marks === 'string' ? JSON.parse(game.marks) : game.marks,
+                links: typeof game.links === 'string' ? JSON.parse(game.links) : game.links,
+                scenes: typeof game.scenes === 'string' ? JSON.parse(game.scenes) : game.scenes,
+                challenges: typeof game.challenges === 'string' ? JSON.parse(game.challenges) : game.challenges
+            };
+        }
+        return null;
     }
 
     async update(id, gameData) {
-        const game = await Game.findByPk(id);
-        if (!game) throw new Error('Jogo não encontrado');
-        return await game.update(gameData);
+        const game = await Game.findOne({ 
+            where: { journey_id: id },
+        });
+        if (!game) {
+            throw new Error('Jogo não encontrado');
+        }
+        
+        // Garante que os campos sejam stringificados
+        const dataToUpdate = {
+            marks: gameData.marks,
+            links: gameData.links,
+            scenes: gameData.scenes,
+            challenges: gameData.challenges
+        };
+        console.log("----game update----");
+        console.log(game);
+        await game.update(dataToUpdate);
+        return game; // Retorna o jogo atualizado
+    }
+
+    async findByJourneyId(journeyId) {
+        const game = await Game.findOne({ 
+            where: { journey_id: journeyId },
+            include: [{
+                model: Journey,
+                as: 'Journey',
+                attributes: ['title', 'description', 'imagePath', 'user_id']
+            }]
+        });
+        
+        if (game) {
+            return {
+                ...game.toJSON(),
+                marks: game.marks,
+                links: game.links,
+                scenes: game.scenes,
+                challenges: game.challenges
+            };
+        }
+        return null;
     }
 }
 

@@ -36,6 +36,11 @@ const Journey = sequelize.define('Journey', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    gameType: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 1
+    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: false,

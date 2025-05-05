@@ -1,22 +1,24 @@
 const { JourneyService } = require('../services');
 const { verifyToken } = require('../middlewares/authMiddleware');
+const upload = require('../config/multer');
+const fs = require('fs');
+const path = require('path');
 
 class JourneyController {
     async index(req, res) {
         try {
             const userId = req.user.id;
             const { page = 1, area } = req.query;
-            
+
             const journeys = await JourneyService.getUserJourneys(userId, {
                 page: parseInt(page),
                 perPage: 3
             });
-
             res.status(200).json(journeys);
         } catch (error) {
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Erro ao carregar jornadas',
-                error: error.message 
+                error: error.message
             });
         }
     }
@@ -24,7 +26,7 @@ class JourneyController {
     async listAll(req, res) {
         try {
             const { page = 1, area } = req.query;
-            
+
             const journeys = await JourneyService.getPublishedJourneys({
                 page: parseInt(page),
                 perPage: 3,
@@ -33,9 +35,9 @@ class JourneyController {
 
             res.status(200).json(journeys);
         } catch (error) {
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Erro ao carregar jornadas públicas',
-                error: error.message 
+                error: error.message
             });
         }
     }
@@ -44,103 +46,105 @@ class JourneyController {
         try {
             const { id } = req.params;
             const journey = await JourneyService.getJourneyById(id);
-            
+
             if (!journey) {
                 return res.status(404).json({ message: 'Jornada não encontrada' });
             }
 
             res.status(200).json(journey);
         } catch (error) {
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Erro ao carregar jornada',
-                error: error.message 
-            });
-        }
-    }
-
-    async download(req, res) {
-        try {
-            const { user_id, id } = req.params;
-            const filePath = await JourneyService.prepareDownload(user_id, id);
-            
-            res.download(filePath, `jornada-${id}.zip`, (err) => {
-                if (err) {
-                    console.error('Erro no download:', err);
-                }
-                // Remove o arquivo zip após o download
-                fs.unlinkSync(filePath);
-            });
-        } catch (error) {
-            res.status(500).json({ 
-                message: 'Erro ao preparar download',
-                error: error.message 
-            });
-        }
-    }
-
-    async store(req, res) {
-        console.log(req);
-        try {
-            const userId = req.user.id;
-            
-            // if (!req.body.imageData) {
-            //     return res.status(400).json({ 
-            //         message: 'A escolha da IMAGEM é obrigatória' 
-            //     });
-            // }
-    
-            // Processa a imagem em base64
-            // const imagePath = await JourneyService.processBase64Image(
-            //     req.body.imageData, 
-            //     userId
-            // );
-    
-            const journeyData = {
-                user_id: userId,
-                title: req.journey.title,
-                description: req.description,
-                area_id: req.area_id,
-                publish: req.publish || false,
-                //imagePath: imagePath
-            };
-            console.log(journeyData);
-            const journey = await JourneyService.createJourney(journeyData);
-            
-            res.status(201).json(journey);
-        } catch (error) {
-            // Remove o arquivo se foi criado
-            if (error.imagePath) {
-                fs.unlinkSync(path.join(__dirname, `../../${error.imagePath}`));
-            }
-            res.status(500).json({ 
-                message: 'Erro na criação do Game',
                 error: error.message
             });
         }
     }
 
-    async update(req, res) {
+    async download(req, res, next) {
         try {
-            const { id } = req.params;
+            const { user_id, id } = req.params;
+            const filePath = await JourneyService.prepareDownload(user_id, id);
+            const filename = `jornada-${id}.zip`;
+
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+            const stream = fs.createReadStream(filePath);
+            stream.on('error', next);
+            stream.pipe(res);
+
+            // limpa o arquivo temporário ao terminar o envio
+            res.on('finish', () => fs.unlink(filePath, () => {}));
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    async store(req, res) {
+        try {
+            const { title, description, area_id, publish } = req.body;
+
+            if (!req.file) {
+                return res.status(400).json({ message: 'A escolha da IMAGEM é obrigatória' });
+            }
+
             const userId = req.user.id;
+            const imagePath = `${userId}/${req.file.filename}`;
+            const imageUrl = `${req.protocol}://${req.get('host')}${imagePath}`; // útil pro front
             
             const journeyData = {
-                ...req.body,
                 user_id: userId,
-                imagePath: req.file ? `/uploads/${req.file.filename}` : undefined
+                title: (title || '').trim(),
+                description,
+                area_id: Number.parseInt(area_id, 10) || null,
+                publish: publish === '1' || publish === 'true' || publish === true,
+                imagePath, // ex.: /storage/games/1/img/123.png
             };
 
+            const journey = await JourneyService.createJourney(journeyData);
+            const payload = typeof journey?.toJSON === 'function' ? journey.toJSON() : journey;
+
+            return res.status(201).json({ ...payload, imageUrl });
+        } catch (error) {
+            if (req.file?.path) {
+                try { fs.unlinkSync(req.file.path); } catch { /* ignore */ }
+            }
+            return res.status(500).json({
+                message: 'Erro na criação do Game',
+                error: error.message,
+            });
+        }
+    }
+
+
+    async update(req, res) {
+        try {
+            debugger
+            const { id } = req.params;
+            const userId = req.user.id;
+
+            const journeyData = {
+                ...req.body,
+                user_id: userId
+            };
+
+            // Se foi enviado um novo arquivo, atualiza o imagePath
+            if (req.file) {
+                journeyData.imagePath = `${userId.toString()}/${req.file.filename}`
+            }
+
             const journey = await JourneyService.updateJourney(id, journeyData);
-            
+
             res.status(200).json(journey);
         } catch (error) {
             if (req.file) {
                 fs.unlinkSync(req.file.path);
             }
-            res.status(400).json({ 
+            res.status(400).json({
                 message: 'Erro ao atualizar jornada',
                 error: error.message,
-                errors: error.errors 
+                errors: error.errors
             });
         }
     }
@@ -149,16 +153,16 @@ class JourneyController {
         try {
             const { id } = req.params;
             const journey = await JourneyService.getJourneyForEdit(id);
-            
+
             if (!journey) {
                 return res.status(404).json({ message: 'Jornada não encontrada' });
             }
 
             res.status(200).json(journey);
         } catch (error) {
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Erro ao carregar jornada para edição',
-                error: error.message 
+                error: error.message
             });
         }
     }
@@ -167,15 +171,46 @@ class JourneyController {
         try {
             const { id } = req.params;
             await JourneyService.deleteJourney(id);
-            
+
             res.status(204).send();
         } catch (error) {
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Erro ao excluir jornada',
-                error: error.message 
+                error: error.message
             });
         }
     }
+
+    // controllers/JourneyController.js
+    async sendImage(req, res) {
+        try {
+            const userId = String(req.params.userId || req.params.id || '');
+            const fileName = String(req.params.fileName || req.params.file || '');
+
+            // validações simples
+            if (!/^\d+$/.test(userId)) {
+                return res.status(400).json({ message: 'userId inválido' });
+            }
+            if (!fileName || fileName.includes('..') || path.isAbsolute(fileName)) {
+                return res.status(400).json({ message: 'nome de arquivo inválido' });
+            }
+            // caminho absoluto até a imagem
+            const absPath = path.join(process.cwd(), 'storage', 'games', userId, 'img', fileName);
+
+            if (!fs.existsSync(absPath)) {
+                return res.status(404).json({ message: 'Imagem não encontrada' });
+            }
+
+            // cache (opcional)
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+
+            return res.sendFile(absPath);
+        } catch (err) {
+            console.error('sendImage error:', err);
+            return res.status(500).json({ message: 'Erro ao enviar a imagem' });
+        }
+    }
+
 }
 
 module.exports = new JourneyController();
