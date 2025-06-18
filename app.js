@@ -11,7 +11,7 @@ const app = express();
 
 // Configuração do CORS
 app.use(cors({
-    origin: 'http://localhost:8080', // Ou a URL do seu frontend
+    origin: 'http://localhost:8080',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -19,8 +19,17 @@ app.use(cors({
 // Middlewares
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(errorHandler);
+app.use((req, res, next) => {
+  if (req.is('multipart/form-data')) {
+    if (req.headers['content-length'] > 5 * 1024 * 1024) { // 5MB
+      return res.status(413).json({ error: 'Arquivo muito grande' });
+    }
+  }
+  next();
+});
 
 // Rotas
 app.use('/api', routes);

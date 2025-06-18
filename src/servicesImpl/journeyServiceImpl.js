@@ -1,5 +1,6 @@
 const JourneyService = require('../services/journeyService');
 const JourneyRepository = require('../repositories/journeyRepository');
+const GameRepository = require('../repositories/gameRepository');
 const Journey = require("../entities/journeyEntity");
 const Game = require("../entities/gameEntity");
 const User = require("../entities/userEntity");
@@ -110,7 +111,7 @@ class JourneyServiceImpl extends JourneyService {
     
         // Cria o diretório se não existir
         if (!fs.existsSync(folderPath)) {
-            fs.mkdirSync(folderPath, { recursive: true });
+            fs. mkdirSync(folderPath, { recursive: true });
         }
     
         // Escreve o arquivo
@@ -178,6 +179,10 @@ class JourneyServiceImpl extends JourneyService {
         }
 
         return await journey.destroy();
+    }
+
+    async sendImage (id, fileName) {
+        return path.join(__dirname, '../../storage/games', id, 'img', fileName);
     }
 }
 

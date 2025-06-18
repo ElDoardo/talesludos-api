@@ -8,6 +8,7 @@ class JourneyService {
     async processBase64Image(base64Data, userId) {}
     async updateJourney(id, journeyData) {}
     async deleteJourney(id) {}
+    async sendImage(id,fileName){}
 
 }
 

@@ -7,7 +7,7 @@ const { generateGameIndex, generateGameScript } = require('../utils/fileGenerato
 
 class GameServiceImpl extends GameService {
     async getGameForEdit(id) {
-        const game = await GameRepository.findById(id);
+        const game = await GameRepository.findByJourneyId(id);
         if (!game) {
             throw new Error('Jogo não encontrado');
         }
@@ -18,36 +18,43 @@ class GameServiceImpl extends GameService {
         }
         
         return {
-            game,
+            game: {
+                ...game,
+                marks: game.marks || { coords: [], nextMark: 1 },
+                links: game.links || [],
+                scenes: game.scenes || [],
+                challenges: game.challenges || []
+            },
             image: journey.imagePath,
             title: journey.title
         };
     }
 
     async updateGame(id, gameData) {
-        const game = await GameRepository.findById(id);
-        if (!game) {
-            throw new Error('Jogo não encontrado');
-        }
-        
-        // Converte campos para string JSON se necessário
+        // Converte os campos para o formato correto
         const dataToUpdate = {
-            marks: typeof gameData.marks === 'string' ? gameData.marks : JSON.stringify(gameData.marks),
-            links: typeof gameData.links === 'string' ? gameData.links : JSON.stringify(gameData.links),
-            scenes: typeof gameData.scenes === 'string' ? gameData.scenes : JSON.stringify(gameData.scenes),
-            challenges: typeof gameData.challenges === 'string' ? gameData.challenges : JSON.stringify(gameData.challenges)
+            marks: gameData.marks || { coords: [], nextMark: 1 },
+            links: gameData.links || [],
+            scenes: gameData.scenes || [],
+            challenges: gameData.challenges || []
         };
         
-        return await GameRepository.update(id, dataToUpdate);
+        const updatedGame = await GameRepository.update(id, dataToUpdate);
+        
+        if (!updatedGame) {
+            throw new Error('Falha ao atualizar o jogo');
+        }
+        
+        return updatedGame;
     }
 
     async generateGameFiles(journeyId, userId) {
-        const game = await GameRepository.findById(journeyId);
+        const game = await GameRepository.findByJourneyId(journeyId);
         if (!game) {
             throw new Error('Jogo não encontrado');
         }
         
-        const journey = await JourneyRepository.findById(game.journey_id);
+        const journey = await JourneyRepository.findById(journeyId);
         if (!journey) {
             throw new Error('Jornada não encontrada');
         }
@@ -80,13 +87,13 @@ class GameServiceImpl extends GameService {
             folder: path.join(basePath, 'Game1/'),
             title: journey.title,
             description: journey.description,
-            marks: game.marks,
-            links: game.links,
-            scenes: game.scenes,
-            challenges: game.challenges
+            marks: JSON.stringify(game.marks),
+            links: JSON.stringify(game.links),
+            scenes: JSON.stringify(game.scenes),
+            challenges: JSON.stringify(game.challenges)
         });
     }
-    
+
     async _ensureDirectoryExists(dirPath) {
         try {
             await fs.promises.access(dirPath);

@@ -1,5 +1,8 @@
 const { JourneyService } = require('../services');
 const { verifyToken } = require('../middlewares/authMiddleware');
+const upload = require('../config/multer');
+const fs = require('fs');
+const path = require('path');
 
 class JourneyController {
     async index(req, res) {
@@ -79,42 +82,39 @@ class JourneyController {
     }
 
     async store(req, res) {
-        console.log(req);
         try {
-            const userId = req.user.id;
+            console.log('Corpo da requisição:', req.body); // Debug
+            console.log('Arquivo recebido:', req.file);   // Debug
             
-            // if (!req.body.imageData) {
-            //     return res.status(400).json({ 
-            //         message: 'A escolha da IMAGEM é obrigatória' 
-            //     });
-            // }
-    
-            // Processa a imagem em base64
-            // const imagePath = await JourneyService.processBase64Image(
-            //     req.body.imageData, 
-            //     userId
-            // );
-    
+            if (!req.file) {
+                console.log('Nenhum arquivo recebido');    // Debug
+                return res.status(400).json({ 
+                    message: 'A escolha da IMAGEM é obrigatória' 
+                });
+            }
+
             const journeyData = {
-                user_id: userId,
-                title: req.journey.title,
-                description: req.description,
-                area_id: req.area_id,
-                publish: req.publish || false,
-                //imagePath: imagePath
+                user_id: req.user.id,
+                title: req.body.title,
+                description: req.body.description,
+                area_id: req.body.area_id,
+                publish: req.body.publish === '1',
+                imagePath: `/games/${req.user.id}/img/${req.file.filename}`
             };
-            console.log(journeyData);
+
+            console.log('Dados da jornada:', journeyData); // Debug
             const journey = await JourneyService.createJourney(journeyData);
             
             res.status(201).json(journey);
         } catch (error) {
-            // Remove o arquivo se foi criado
-            if (error.imagePath) {
-                fs.unlinkSync(path.join(__dirname, `../../${error.imagePath}`));
+            console.error('Erro detalhado:', error);       // Debug mais detalhado
+            if (req.file) {
+                fs.unlinkSync(req.file.path);
             }
             res.status(500).json({ 
                 message: 'Erro na criação do Game',
-                error: error.message
+                error: error.message,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
             });
         }
     }
@@ -126,9 +126,13 @@ class JourneyController {
             
             const journeyData = {
                 ...req.body,
-                user_id: userId,
-                imagePath: req.file ? `/uploads/${req.file.filename}` : undefined
+                user_id: userId
             };
+
+            // Se foi enviado um novo arquivo, atualiza o imagePath
+            if (req.file) {
+                journeyData.imagePath = path.join('games', userId.toString(), 'img', req.file.filename);
+            }
 
             const journey = await JourneyService.updateJourney(id, journeyData);
             
@@ -175,6 +179,20 @@ class JourneyController {
                 error: error.message 
             });
         }
+    }
+
+    async sendImage(req,res) {
+        const id = req.params.id;
+        const fileName = req.params.fileName;
+        const filePath =  await JourneyService.sendImage(id, fileName);
+        
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                console.error('Erro ao enviar o arquivo:', err);
+                res.status(404).send('Arquivo');
+            }
+        });
+        
     }
 }
 
