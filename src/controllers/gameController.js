@@ -4,20 +4,13 @@ const { verifyToken } = require('../middlewares/authMiddleware');
 const GameController = {
     async edit(req, res) {
         try {
-            const { id } = req.params;
-            const gameData = await GameService.getGameForEdit(id);
-            
+            const { id } = req.params; // id = journeyId
+            const userId = req.user.id;
+
+            const gameData = await GameService.getGameForEdit(id, userId);
+
             res.status(200).json({
-                game: {
-                    id: gameData.game.id,
-                    journey_id: gameData.game.journey_id,
-                    marks: gameData.game.marks,
-                    links: gameData.game.links,
-                    scenes: gameData.game.scenes,
-                    challenges: gameData.game.challenges,
-                    createdAt: gameData.game.createdAt,
-                    updatedAt: gameData.game.updatedAt
-                },
+                game: gameData.game,
                 image: gameData.image,
                 title: gameData.title
             });
@@ -31,11 +24,10 @@ const GameController = {
 
     async update(req, res) {
         try {
-            const { id } = req.params;
+            const { id } = req.params; // id = journeyId
             const userId = req.user.id;
             const gameData = req.body;
             
-            // Garante que os campos estejam no formato correto
             const dataToUpdate = {
                 marks: gameData.marks || { coords: [], nextMark: 1 },
                 links: gameData.links || [],

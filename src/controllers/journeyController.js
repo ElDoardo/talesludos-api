@@ -102,12 +102,10 @@ class JourneyController {
                 imagePath: `/games/${req.user.id}/img/${req.file.filename}`
             };
 
-            console.log('Dados da jornada:', journeyData); // Debug
             const journey = await JourneyService.createJourney(journeyData);
             
             res.status(201).json(journey);
         } catch (error) {
-            console.error('Erro detalhado:', error);       // Debug mais detalhado
             if (req.file) {
                 fs.unlinkSync(req.file.path);
             }
@@ -181,19 +179,21 @@ class JourneyController {
         }
     }
 
-    async sendImage(req,res) {
-        const id = req.params.id;
-        const fileName = req.params.fileName;
-        const filePath =  await JourneyService.sendImage(id, fileName);
+    // async sendImage(req,res) {
+    //     const id = req.params.id;
+    //     console.log("----id:----");
+    //     console.log(id);
+    //     const fileName = req.params.fileName;
+    //     const filePath =  await JourneyService.sendImage(id, fileName);
         
-        res.sendFile(filePath, (err) => {
-            if (err) {
-                console.error('Erro ao enviar o arquivo:', err);
-                res.status(404).send('Arquivo');
-            }
-        });
+    //     res.sendFile(filePath, (err) => {
+    //         if (err) {
+    //             console.error('Erro ao enviar o arquivo:', err);
+    //             res.status(404).send('Arquivo');
+    //         }
+    //     });
         
-    }
+    // }
 }
 
 module.exports = new JourneyController();

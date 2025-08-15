@@ -11,17 +11,19 @@ const app = express();
 
 // Configuração do CORS
 app.use(cors({
-    origin: 'http://localhost:8080',
+    origin: 'http://localhost:8081',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Middlewares
+// Middleware para arquivos estáticos
+app.use('/storage', express.static(path.join(__dirname, 'storage')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Middlewares de body parsing
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(errorHandler);
 app.use((req, res, next) => {
   if (req.is('multipart/form-data')) {
     if (req.headers['content-length'] > 5 * 1024 * 1024) { // 5MB
@@ -31,8 +33,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rotas
+// Rotas de API
 app.use('/api', routes);
+
+// Tratamento de erros
+app.use(errorHandler);
 
 // Inicialização
 seedAreas().then(() => {

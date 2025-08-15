@@ -6,17 +6,18 @@ const path = require('path');
 const { generateGameIndex, generateGameScript } = require('../utils/fileGenerator');
 
 class GameServiceImpl extends GameService {
-    async getGameForEdit(id) {
-        const game = await GameRepository.findByJourneyId(id);
-        if (!game) {
-            throw new Error('Jogo não encontrado');
-        }
+    async getGameForEdit(journeyId, userId) {
+        const game = await GameRepository.findByJourneyId(journeyId);
+        if (!game) throw new Error('Jogo não encontrado');
         
         const journey = await JourneyRepository.findById(game.journey_id);
-        if (!journey) {
-            throw new Error('Jornada não encontrada');
-        }
-        
+        if (!journey) throw new Error('Jornada não encontrada');
+
+        // Garante que a imagem venha no formato /games/{userId}/img/{fileName}
+        const normalizedImagePath = journey.imagePath.replace(/\\/g, '/');
+        const imageName = path.basename(normalizedImagePath);
+        const imageUrl = `/games/${userId}/img/${imageName}`;
+
         return {
             game: {
                 ...game,
@@ -25,13 +26,12 @@ class GameServiceImpl extends GameService {
                 scenes: game.scenes || [],
                 challenges: game.challenges || []
             },
-            image: journey.imagePath,
+            image: imageUrl,
             title: journey.title
         };
     }
 
     async updateGame(id, gameData) {
-        // Converte os campos para o formato correto
         const dataToUpdate = {
             marks: gameData.marks || { coords: [], nextMark: 1 },
             links: gameData.links || [],
@@ -40,49 +40,39 @@ class GameServiceImpl extends GameService {
         };
         
         const updatedGame = await GameRepository.update(id, dataToUpdate);
-        
-        if (!updatedGame) {
-            throw new Error('Falha ao atualizar o jogo');
-        }
+        if (!updatedGame) throw new Error('Falha ao atualizar o jogo');
         
         return updatedGame;
     }
 
     async generateGameFiles(journeyId, userId) {
         const game = await GameRepository.findByJourneyId(journeyId);
-        if (!game) {
-            throw new Error('Jogo não encontrado');
-        }
-        
+        if (!game) throw new Error('Jogo não encontrado');
+
         const journey = await JourneyRepository.findById(journeyId);
-        if (!journey) {
-            throw new Error('Jornada não encontrada');
-        }
-        
+        if (!journey) throw new Error('Jornada não encontrada');
+
         const basePath = path.join('storage', 'games', userId.toString(), journeyId.toString());
         const gamePath = path.join(basePath, 'Game1');
-        
-        // Cria estrutura de diretórios
+
         await this._ensureDirectoryExists(gamePath);
         await this._ensureDirectoryExists(path.join(gamePath, 'config'));
         await this._ensureDirectoryExists(path.join(gamePath, 'media'));
-        
-        // Copia arquivos base (precisa ter uma pasta Game1 com os arquivos base)
+
         await this._copyBaseGameFiles(gamePath);
-        
-        // Copia imagem de fundo
-        const imageName = path.basename(journey.imagePath);
-        await fs.promises.copyFile(
-            path.join('storage', journey.imagePath),
-            path.join(gamePath, 'media', imageName)
-        );
-        
-        // Gera arquivos dinâmicos
+
+        const normalizedImagePath = journey.imagePath.replace(/\\/g, '/');
+        const imageName = path.basename(normalizedImagePath);
+        const sourceImagePath = path.join('storage', normalizedImagePath);
+        const destImagePath = path.join(gamePath, 'media', imageName);
+
+        await fs.promises.copyFile(sourceImagePath, destImagePath);
+
         await generateGameIndex({
             folder: path.join(basePath, 'Game1/'),
             imageName
         });
-        
+
         await generateGameScript({
             folder: path.join(basePath, 'Game1/'),
             title: journey.title,

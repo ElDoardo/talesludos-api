@@ -7,7 +7,6 @@ const JourneyController = require('./controllers/journeyController');
 const UserController = require('./controllers/userController');
 const { verifyToken } = require('./middlewares/authMiddleware');
 const upload = require('./config/multer');
-const journeyController = require('./controllers/journeyController');
 
 const router = express.Router();
 
@@ -27,7 +26,7 @@ router.get('/game/edit/:id', verifyToken, GameController.edit);
 router.put('/game/update/:id', verifyToken, GameController.update);
 
 // Rotas de Journey
-router.get('/journey/:id/:fileName', JourneyController.sendImage);
+//router.get('/journey/:id/:fileName', JourneyController.sendImage);
 router.get('/journey/listall', JourneyController.listAll);
 router.get('/journey/view/:id', JourneyController.view);
 router.get('/journey/download/:user_id/:id', JourneyController.download);
@@ -35,7 +34,7 @@ router.get('/journey/index', verifyToken, JourneyController.index);
 router.get('/journey/edit/:id', verifyToken, JourneyController.edit);
 router.post('/journey/store', 
     verifyToken, 
-    upload.single('imageData'), // 'imageData' deve ser o nome do campo no form
+    upload.single('imageData'),
     JourneyController.store
 );
 router.post('/journey/update/:id', 

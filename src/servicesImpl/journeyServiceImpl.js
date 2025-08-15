@@ -12,7 +12,7 @@ const archiver = require('archiver');
 class JourneyServiceImpl extends JourneyService {
     async getUserJourneys(userId, { page = 1, perPage = 3 }) {
         const offset = (page - 1) * perPage;
-        
+
         const { count, rows } = await Journey.findAndCountAll({
             where: { user_id: userId },
             order: [['id', 'DESC']],
@@ -33,31 +33,42 @@ class JourneyServiceImpl extends JourneyService {
         };
     }
 
-    async getPublishedJourneys({ page = 1, perPage = 3, areaId = null }) {
+    async getPublishedJourneys({ page = 1, perPage = 3, areaId = null, baseUrl = '' }) {
         const offset = (page - 1) * perPage;
         const where = { publish: true };
-        
+
         if (areaId) {
             where.area_id = areaId;
         }
 
         const { count, rows } = await Journey.findAndCountAll({
-            where: where,
+            where,
             order: [['id', 'DESC']],
             limit: perPage,
-            offset: offset,
-            include: [
-                { model: User, attributes: ['name'] },
-                { model: Area, attributes: ['title'] }
-            ]
+            offset
         });
 
+        const lastPage = Math.ceil(count / perPage);
+
+        const path = `${baseUrl}/api/journey/index`;
+        const makePageUrl = (p) => p ? `${path}?page=${p}` : null;
+
+        const from = count > 0 ? offset + 1 : null;
+        const to = Math.min(offset + perPage, count);
+
         return {
+            current_page: page,
             data: rows,
-            total: count,
-            currentPage: page,
-            perPage: perPage,
-            lastPage: Math.ceil(count / perPage)
+            first_page_url: makePageUrl(1),
+            from,
+            last_page: lastPage,
+            last_page_url: makePageUrl(lastPage),
+            next_page_url: page < lastPage ? makePageUrl(page + 1) : null,
+            path,
+            per_page: perPage,
+            prev_page_url: page > 1 ? makePageUrl(page - 1) : null,
+            to,
+            total: count
         };
     }
 
@@ -77,7 +88,7 @@ class JourneyServiceImpl extends JourneyService {
     async prepareDownload(userId, journeyId) {
         const gamePath = path.join(__dirname, `../../storage/games/${userId}/${journeyId}/Game1`);
         const zipPath = path.join(__dirname, `../../storage/games/${userId}/${journeyId}.zip`);
-        
+
         if (!fs.existsSync(gamePath)) {
             throw new Error('Arquivos do jogo não encontrados');
         }
@@ -94,39 +105,39 @@ class JourneyServiceImpl extends JourneyService {
             archive.finalize();
         });
     }
-    
+
     async processBase64Image(base64Data, userId) {
-        console.log("processBase64Image: "+base64Data);
+        console.log("processBase64Image: " + base64Data);
         // Verifica se é uma string base64 válida
         const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
         if (!matches) {
             throw new Error('Formato de imagem inválido');
         }
-    
+
         const extension = matches[1] === 'jpeg' ? 'jpg' : matches[1];
         const filename = `${uuidv4()}.${extension}`;
         const folderPath = path.join('storage', 'games', userId.toString(), 'img');
         const fullPath = path.join(folderPath, filename);
         const relativePath = `/games/${userId}/img/${filename}`;
-    
+
         // Cria o diretório se não existir
         if (!fs.existsSync(folderPath)) {
-            fs. mkdirSync(folderPath, { recursive: true });
+            fs.mkdirSync(folderPath, { recursive: true });
         }
-    
+
         // Escreve o arquivo
         await fs.promises.writeFile(
             fullPath,
             matches[2],
             'base64'
         );
-    
+
         return relativePath;
     }
-    
+
     async createJourney(journeyData) {
         const journey = await JourneyRepository.create(journeyData);
-        
+
         // Cria um jogo vazio associado
         await GameRepository.create({
             journey_id: journey.id,
@@ -135,13 +146,13 @@ class JourneyServiceImpl extends JourneyService {
             scenes: "[]",
             challenges: "[]"
         });
-    
+
         return journey;
     }
 
     async updateJourney(id, journeyData) {
         const journey = await Journey.findByPk(id);
-        
+
         if (!journey) {
             throw new Error('Jornada não encontrada');
         }
@@ -159,7 +170,7 @@ class JourneyServiceImpl extends JourneyService {
 
     async deleteJourney(id) {
         const journey = await Journey.findByPk(id);
-        
+
         if (!journey) {
             throw new Error('Jornada não encontrada');
         }
@@ -181,9 +192,9 @@ class JourneyServiceImpl extends JourneyService {
         return await journey.destroy();
     }
 
-    async sendImage (id, fileName) {
-        return path.join(__dirname, '../../storage/games', id, 'img', fileName);
-    }
+    // async sendImage(id, fileName) {
+    //     return path.join(__dirname, '../../storage/games', id, 'img', fileName);
+    // }
 }
 
 module.exports = new JourneyServiceImpl();

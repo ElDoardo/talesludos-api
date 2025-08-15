@@ -47,9 +47,10 @@ class GameRepository {
             scenes: JSON.stringify(gameData.scenes),
             challenges: JSON.stringify(gameData.challenges)
         };
+        console.log("----game update----");
         console.log(game);
         await game.update(dataToUpdate);
-        return this.findById(id); // Retorna o jogo atualizado
+        return game; // Retorna o jogo atualizado
     }
 
     async findByJourneyId(journeyId) {
