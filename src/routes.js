@@ -5,28 +5,27 @@ const ContactController = require('./controllers/contactController');
 const GameController = require('./controllers/gameController');
 const JourneyController = require('./controllers/journeyController');
 const UserController = require('./controllers/userController');
-const { verifyToken } = require('./middlewares/authMiddleware');
+const { verifyToken, optionalAuth } = require('./middlewares/authMiddleware');
 const upload = require('./config/multer');
 
 const router = express.Router();
 
-// Rotas públicas
+// Rotas auth
 router.post('/auth/register', UserController.register);
 router.post('/auth/login', AuthController.login);
+router.post('/auth/logout', optionalAuth, AuthController.logout);
 //router.post('/auth/forgotpassword', AuthController.forgotPassword);
 //router.post('/auth/resetpassword', AuthController.resetPassword);
+
+//Rotas Area
 router.get('/areas', AreaController.index);
 router.post('/contact', ContactController.submit);
 
-// Rotas protegidas
-router.post('/auth/logout', verifyToken, AuthController.logout);
-
-// Rotas de Game
+// Rotas Game
 router.get('/game/edit/:id', verifyToken, GameController.edit);
 router.put('/game/update/:id', verifyToken, GameController.update);
 
-// Rotas de Journey
-//router.get('/journey/:id/:fileName', JourneyController.sendImage);
+// Rotas Journey
 router.get('/journey/listall', JourneyController.listAll);
 router.get('/journey/view/:id', JourneyController.view);
 router.get('/journey/download/:user_id/:id', JourneyController.download);
