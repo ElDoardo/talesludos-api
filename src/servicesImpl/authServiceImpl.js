@@ -1,5 +1,7 @@
 const AuthService = require('../services/authService');
 const UserService = require('./userServiceImpl');
+const UserRepository = require('../repositories/userRepository');
+const { sendResetPasswordEmail } = require("../utils/mailer");
 const { generateToken } = require('../utils/jwt');
 const { addToBlacklist } = require('../utils/tokenBlackList');
 
@@ -10,6 +12,20 @@ class AuthServiceImpl extends AuthService {
         return { user, token };
     }
 
+    async forgotPassword(email) {
+        debugger;
+        try{
+            const user = await UserRepository.findByEmail(email);
+            if (user){
+                sendResetPasswordEmail(user);
+            }
+        } catch(error) {
+            debugger;
+            console.log(error);
+        }
+        debugger;
+    }
+    
     async logout(token) {
         if (!token) {
             throw new Error('Token não fornecido');

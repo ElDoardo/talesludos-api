@@ -4,6 +4,7 @@ const ContactServiceImpl= require('../servicesImpl/contactServiceImpl');
 const GameServiceImpl = require('../servicesImpl/gameServiceImpl');
 const JourneyServiceImpl = require('../servicesImpl/journeyServiceImpl');
 const UserServiceImpl = require('../servicesImpl/userServiceImpl');
+const PasswordResetImpl = require('../servicesImpl/passwordResetServiceImpl');
 
 module.exports = {
     AreaService: AreaServiceImpl,
@@ -12,4 +13,5 @@ module.exports = {
     GameService: GameServiceImpl,
     JourneyService: JourneyServiceImpl,
     UserService: UserServiceImpl,
+    PasswordResetService : PasswordResetImpl
 };

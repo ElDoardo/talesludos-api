@@ -1,4 +1,4 @@
-const { AuthService } = require('../services');
+const { AuthService, UserService, PasswordResetService } = require('../services');
 
 const AuthController = {
     async login(req, res) {
@@ -25,7 +25,58 @@ const AuthController = {
             });
         }
     },
-
+    async forgotPassword(req, res) {
+        debugger;
+        try {
+            const email = req.body.email;
+            const user = await AuthService.forgotPassword(email);
+        } catch (error) {
+            res.status(404).json({
+                error: "Email não encontrado"
+            })
+        }
+    },
+    async validatePasswordReset(req, res) {
+        debugger;
+        try {
+            const token = req.body.token;
+            const passwordReset = PasswordResetService.findByToken(token);
+            if(!passwordReset){
+                res.status(404).json({
+                    error: "Token não encontrado"
+                })
+            }
+            res.status(200).json({
+                data: {email: passwordReset.email, token: token}
+            })
+        } catch (error) {
+             res.status(404).json({
+                error: "Token não encontrado"
+            })
+        }
+    },
+    async resetPassword(req, res){
+        try{
+            const {token, email, newPassword} = req.body;
+            const passwordReset = PasswordResetService.findByToken(token);
+            if(!passwordReset){
+                res.status(404).json({
+                    error: "Token não encontrado"
+                })
+            }
+            const user = UserService.findByEmail(email);
+            if(!user){
+                res.status(404).json({
+                    error: "Usuário não encontrado"
+                })
+            }
+            user.password = newPassword;
+            const newUser = await UserService.updateUser(user.id, user);
+            res.status(200).json({ data: newUser});
+        }catch{
+            res.status(400).json({ message: error.message });
+        }
+    },
     async logout(req, res) {
         try {
             const token = req.headers.authorization?.split(' ')[1];

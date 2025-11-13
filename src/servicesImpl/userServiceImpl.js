@@ -2,6 +2,7 @@ const UserService = require('../services/userService');
 const UserRepository = require('../repositories/userRepository');
 const { generateToken } = require('../utils/jwt');
 const bcrypt = require('bcryptjs');
+const User = require('../entities/userEntity');
 
 class UserServiceImpl extends UserService {
     async register(userData) {
@@ -13,6 +14,16 @@ class UserServiceImpl extends UserService {
         const user = await UserRepository.create(userData);
         const token = generateToken(user);
         return { user, token };
+    }
+
+    async updateUser(id, userData) {
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            throw new Error('Usuário não encontrada');
+        }
+
+        return await user.update(userData);
     }
 
     async validateUser(email, password) {
