@@ -13,17 +13,13 @@ class AuthServiceImpl extends AuthService {
     }
 
     async forgotPassword(email) {
-        debugger;
-        try{
-            const user = await UserRepository.findByEmail(email);
-            if (user){
-                sendResetPasswordEmail(user);
-            }
-        } catch(error) {
-            debugger;
-            console.log(error);
+        const user = await UserRepository.findByEmail(email);
+        if (!user){
+            throw new Error('Usuário não encontrado');
         }
-        debugger;
+        await sendResetPasswordEmail(user);
+        return user;
+        
     }
     
     async logout(token) {

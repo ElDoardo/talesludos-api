@@ -23,7 +23,6 @@ const GameController = {
     },
 
     async update(req, res) {
-        debugger
         try {
             const { id } = req.params; // id = journeyId
             const userId = req.user.id;

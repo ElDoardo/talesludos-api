@@ -39,6 +39,10 @@ class UserServiceImpl extends UserService {
 
         return user;
     }
+
+    async findByEmail(email) {
+        return await UserRepository.findByEmail(email);
+    }
 }
 
 module.exports = new UserServiceImpl();

@@ -71,7 +71,6 @@ class GameServiceImpl extends GameService {
         await fs.promises.mkdir(mediaDir, { recursive: true });
         
         await fs.promises.copyFile(sourceImagePath, destImagePath);
-        debugger
         await generateGameIndex({ folder: path.join(basePath, 'Game1/'), imageName });
         await generateGameScript({
             folder: path.join(basePath, 'Game1/'),

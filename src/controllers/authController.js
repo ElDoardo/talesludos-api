@@ -1,5 +1,5 @@
 const { AuthService, UserService, PasswordResetService } = require('../services');
-
+const bcrypt = require('bcryptjs');
 const AuthController = {
     async login(req, res) {
         try {
@@ -26,18 +26,24 @@ const AuthController = {
         }
     },
     async forgotPassword(req, res) {
-        debugger;
         try {
             const email = req.body.email;
             const user = await AuthService.forgotPassword(email);
+            if(!user) {
+                res.status(404).json({
+                    error: "Email não encontrado"
+                })
+            }
+            res.status(200).json({ 
+                message: "Email enviado com sucesso!"
+            });
         } catch (error) {
             res.status(404).json({
-                error: "Email não encontrado"
+                error: "Erro ao enviar email"
             })
         }
     },
     async validatePasswordReset(req, res) {
-        debugger;
         try {
             const token = req.body.token;
             const passwordReset = PasswordResetService.findByToken(token);
@@ -56,25 +62,27 @@ const AuthController = {
         }
     },
     async resetPassword(req, res){
+        
         try{
-            const {token, email, newPassword} = req.body;
-            const passwordReset = PasswordResetService.findByToken(token);
+            const {token, email, password} = req.body;
+            const passwordReset = await PasswordResetService.findByToken(token);
             if(!passwordReset){
                 res.status(404).json({
                     error: "Token não encontrado"
                 })
             }
-            const user = UserService.findByEmail(email);
+            const user = await UserService.findByEmail(email);
             if(!user){
                 res.status(404).json({
                     error: "Usuário não encontrado"
                 })
             }
-            user.password = newPassword;
-            const newUser = await UserService.updateUser(user.id, user);
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const newUser = await UserService.updateUser(user.id, { password: hashedPassword });
+            await PasswordResetService.delete(passwordReset.id);
             res.status(200).json({ data: newUser});
         }catch{
-            res.status(400).json({ message: error.message });
+            // res.status(400).json({ message: error.message });
         }
     },
     async logout(req, res) {

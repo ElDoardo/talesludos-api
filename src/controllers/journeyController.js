@@ -120,7 +120,6 @@ class JourneyController {
 
     async update(req, res) {
         try {
-            debugger
             const { id } = req.params;
             const userId = req.user.id;
 

@@ -9,7 +9,6 @@ async function ensureDirectoryExists(dirPath) {
 
 // Gerar index.html
 async function generateGameIndex({ folder, imageName }) {
-    debugger
     const fullPath = path.resolve(folder);
     await ensureDirectoryExists(fullPath);
 

@@ -12,6 +12,7 @@ class PasswordResetServiceImpl extends PasswordResetService {
 
     async create(passwordResetData) {
         const existingEmail = await PasswordResetRepository.findByEmail(passwordResetData.email);
+
         if (existingEmail) {
             throw new Error('E-mail já cadastrado.');
         }

@@ -5,6 +5,7 @@ class PasswordResetRepository {
     async findByEmail(email) {
         return await PasswordReset.findOne({ where: { email } });
     }
+
     async findByToken(token) {
         return await PasswordReset.findOne({ where: { token } });
     }

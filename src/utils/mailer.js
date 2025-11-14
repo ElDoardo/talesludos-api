@@ -1,13 +1,15 @@
-const PasswordResetService = require("../services/passwordResetService");
+
+const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
     async function sendResetPasswordEmail(user) {
+        const { PasswordResetService } = require("../services");
         const passwordResetData = {
             email: user.email, 
             token: crypto.randomBytes(8).toString("hex")
         }
 
-        const passwordReset = PasswordResetService.create(passwordResetData);
+        const passwordReset = await PasswordResetService.create(passwordResetData);
 
         const resetLink = `http://localhost:8080/reset-password/${passwordResetData.token}`;
 
@@ -46,7 +48,7 @@ const nodemailer = require("nodemailer");
 
         const info = await transporter.sendMail({
             from: '"Servidor Local" <alves2075@gmail.com>',
-            to: 'eduardoguerreirorocha@gmail.com',
+            to: passwordResetData.email,
             subject: "Recuperação de Senha",
             html: htmlTemplate,
         });

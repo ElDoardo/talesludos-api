@@ -19,4 +19,4 @@ const PasswordReset = sequelize.define('PasswordReset', {
     }
 });
 
-module.exports = Contact;
+module.exports = PasswordReset;

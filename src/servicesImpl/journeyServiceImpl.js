@@ -41,7 +41,6 @@ class JourneyServiceImpl extends JourneyService {
         if (areaId) {
             where.area_id = areaId;
         }
-        debugger
         const { count, rows } = await Journey.findAndCountAll({
             where,
             order: [['id', 'DESC']],
@@ -59,7 +58,6 @@ class JourneyServiceImpl extends JourneyService {
 
         const from = count > 0 ? offset + 1 : null;
         const to = Math.min(offset + perPage, count);
-        debugger
         return {
             current_page: page,
             data: rows,
