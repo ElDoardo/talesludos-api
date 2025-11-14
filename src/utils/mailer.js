@@ -10,7 +10,9 @@ const nodemailer = require("nodemailer");
         }
 
         const passwordReset = await PasswordResetService.create(passwordResetData);
-
+        if(!passwordReset) {
+            throw new Error('Token não existe');
+        }
         const resetLink = `http://localhost:8080/reset-password/${passwordResetData.token}`;
 
         let transporter = nodemailer.createTransport({
@@ -56,5 +58,36 @@ const nodemailer = require("nodemailer");
         console.log("Email enviado (capturado pelo MailDev):", info.messageId);
     }
 
+    async function sendContactEmail({ name, email, message }) {
+        let transporter = nodemailer.createTransport({
+            host: "in-v3.mailjet.com", // Replace with your SMTP host
+            port: 587, // Or 465 for SMTPS
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: "a21700bdfb9870a4899bd27e403e1852", // Your email address
+                pass: "6e79a58d2a2cc58cb97a333e0888416b", // Your email password or app password
+            },
+        });
 
-module.exports = { sendResetPasswordEmail };
+        const htmlTemplate = `
+            <h2>Nova mensagem de contato</h2>
+            <p><strong>Nome:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Mensagem:</strong></p>
+            <p>${message}</p>
+            <hr>
+            <p>Enviado automaticamente pelo site.</p>
+        `;
+
+        const info = await transporter.sendMail({
+            from: '"Tales Ludos" <alves2075@gmail.com>',
+            to: "alves2075@gmail.com",
+            replyTo: email,
+            subject: `Contato via site - ${name}`,
+            html: htmlTemplate,
+        });
+
+        console.log("Email enviado (capturado pelo MailDev):", info.messageId);
+    }
+
+module.exports = { sendResetPasswordEmail, sendContactEmail };
