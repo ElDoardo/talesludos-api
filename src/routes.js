@@ -14,7 +14,6 @@ const router = express.Router();
 router.post('/auth/register', UserController.register);
 router.post('/auth/login', AuthController.login);
 router.post('/auth/forgotpassword', AuthController.forgotPassword);
-router.get('/auth/validatepasswordreset/:token', AuthController.validatePasswordReset);
 router.post('/auth/resetpassword/', AuthController.resetPassword);
 router.get('/areas', AreaController.index);
 router.post('/submit', ContactController.submit);

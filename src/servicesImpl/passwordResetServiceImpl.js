@@ -27,8 +27,8 @@ class PasswordResetServiceImpl extends PasswordResetService {
         if (!passwordReset) {
             throw new Error('Email não encontrado.');
         }
-
-        return await passwordReset.destroy();
+        
+        return await PasswordResetRepository.delete(passwordReset);
     }
 }
 

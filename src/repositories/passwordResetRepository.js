@@ -18,11 +18,7 @@ class PasswordResetRepository {
         return await PasswordReset.create(passwordResetData);
     }
 
-    async delete(id) {
-        const passwordReset = await PasswordReset.findByPk(id);
-        if (!passwordReset) {
-            throw new Error('Email não encontrado');
-        }
+    async delete(passwordReset) {
         return await passwordReset.destroy();
     }
 }

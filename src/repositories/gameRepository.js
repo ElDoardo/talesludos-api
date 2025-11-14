@@ -6,27 +6,6 @@ class GameRepository {
         return await Game.create(gameData);
     }
 
-    async findById(id) {
-        const game = await Game.findByPk(id, {
-            include: [{
-                model: Journey,
-                as: 'Journey',
-                attributes: ['title', 'description', 'imagePath', 'user_id']
-            }]
-        });
-        
-        if (game) {
-            return {
-                ...game.toJSON(),
-                marks: typeof game.marks === 'string' ? JSON.parse(game.marks) : game.marks,
-                links: typeof game.links === 'string' ? JSON.parse(game.links) : game.links,
-                scenes: typeof game.scenes === 'string' ? JSON.parse(game.scenes) : game.scenes,
-                challenges: typeof game.challenges === 'string' ? JSON.parse(game.challenges) : game.challenges
-            };
-        }
-        return null;
-    }
-
     async update(id, gameData) {
         const game = await Game.findOne({ 
             where: { journey_id: id },

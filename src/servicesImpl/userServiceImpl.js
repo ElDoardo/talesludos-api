@@ -17,13 +17,13 @@ class UserServiceImpl extends UserService {
     }
 
     async updateUser(id, userData) {
-        const user = await User.findByPk(id);
+        const user = await UserRepository.findById(id);
 
         if (!user) {
             throw new Error('Usuário não encontrada');
         }
 
-        return await user.update(userData);
+        return await UserRepository.update(user, userData);
     }
 
     async validateUser(email, password) {

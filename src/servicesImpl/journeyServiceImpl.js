@@ -1,29 +1,16 @@
 const JourneyService = require('../services/journeyService');
 const JourneyRepository = require('../repositories/journeyRepository');
 const GameRepository = require('../repositories/gameRepository');
-const Journey = require("../entities/journeyEntity");
-const Game = require("../entities/gameEntity");
-const User = require("../entities/userEntity");
-const Area = require("../entities/areaEntity");
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
+const journeyRepository = require('../repositories/journeyRepository');
 const fsp = fs.promises;
 
 class JourneyServiceImpl extends JourneyService {
     async getUserJourneys(userId, { page = 1, perPage = 3 }) {
         const offset = (page - 1) * perPage;
-
-        const { count, rows } = await Journey.findAndCountAll({
-            where: { user_id: userId },
-            order: [['id', 'DESC']],
-            limit: perPage,
-            offset: offset,
-            include: [
-                { model: User, attributes: ['name'] },
-                { model: Area, attributes: ['title'] }
-            ]
-        });
+        const { count, rows } = await JourneyRepository.findAndCountAllJourneyUserArea(userId, perPage, offset);
 
         return {
             data: rows,
@@ -41,15 +28,7 @@ class JourneyServiceImpl extends JourneyService {
         if (areaId) {
             where.area_id = areaId;
         }
-        const { count, rows } = await Journey.findAndCountAll({
-            where,
-            order: [['id', 'DESC']],
-            limit: perPage,
-            offset,
-            include: [
-                { model: User, attributes: ['name'] }
-            ]
-        });
+        const { count, rows } = await JourneyRepository.findAndCountAllJourneyUser(where, perPage, offset);
 
         const lastPage = Math.ceil(count / perPage);
 
@@ -75,16 +54,7 @@ class JourneyServiceImpl extends JourneyService {
     }
 
     async getJourneyById(id) {
-        return await Journey.findByPk(id, {
-            include: [
-                { model: User, attributes: ['name'] },
-                { model: Area, attributes: ['title'] }
-            ]
-        });
-    }
-
-    async getJourneyForEdit(id) {
-        return await Journey.findByPk(id);
+        return await JourneyRepository.findById(id);
     }
 
     async prepareDownload(userId, journeyId) {
@@ -162,7 +132,7 @@ class JourneyServiceImpl extends JourneyService {
     }
 
     async updateJourney(id, journeyData) {
-        const journey = await Journey.findByPk(id);
+        const journey = await JourneyRepository.findById(id);
 
         if (!journey) {
             throw new Error('Jornada não encontrada');
@@ -176,11 +146,11 @@ class JourneyServiceImpl extends JourneyService {
             }
         }
 
-        return await journey.update(journeyData);
+        return await JourneyRepository.update(journeyData);
     }
 
     async deleteJourney(id) {
-        const journey = await Journey.findByPk(id);
+        const journey = await JourneyRepository.findById(id);
 
         if (!journey) {
             throw new Error('Jornada não encontrada');
@@ -200,12 +170,8 @@ class JourneyServiceImpl extends JourneyService {
             fs.rmSync(gamePath, { recursive: true });
         }
 
-        return await journey.destroy();
+        return await journeyRepository.delete(journey);
     }
-
-    // async sendImage(id, fileName) {
-    //     return path.join(__dirname, '../../storage/games', id, 'img', fileName);
-    // }
 }
 
 module.exports = new JourneyServiceImpl();

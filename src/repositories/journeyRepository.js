@@ -23,38 +23,39 @@ class JourneyRepository {
         });
     }
 
-    async update(id, journeyData) {
-        const journey = await Journey.findByPk(id);
+    async update(journeyData) {
+        const journey = await Journey.findByPk(journeyData.id);
         if (!journey) {
             throw new Error('Jornada não encontrada');
         }
         return await journey.update(journeyData);
     }
 
-    async delete(id) {
-        const journey = await Journey.findByPk(id);
-        if (!journey) {
-            throw new Error('Jornada não encontrada');
-        }
+    async delete(journey) {
         return await journey.destroy();
     }
 
-    async findAllByUser(userId) {
-        return await Journey.findAll({
+    async findAndCountAllJourneyUserArea(userId, perPage, offset) {
+        return await Journey.findAndCountAll({
             where: { user_id: userId },
+            order: [['id', 'DESC']],
+            limit: perPage,
+            offset: offset,
             include: [
-                { model: User, attributes: ['name', 'email'] },
+                { model: User, attributes: ['name'] },
                 { model: Area, attributes: ['title'] }
             ]
         });
     }
 
-    async findAllPublished() {
-        return await Journey.findAll({
-            where: { publish: true },
+    async findAndCountAllJourneyUser(where, perPage, offset) {
+        return await Journey.findAndCountAll({
+            where,
+            order: [['id', 'DESC']],
+            limit: perPage,
+            offset,
             include: [
-                { model: User, attributes: ['name', 'email'] },
-                { model: Area, attributes: ['title'] }
+                { model: User, attributes: ['name'] }
             ]
         });
     }

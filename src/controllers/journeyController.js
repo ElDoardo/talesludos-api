@@ -151,7 +151,7 @@ class JourneyController {
     async edit(req, res) {
         try {
             const { id } = req.params;
-            const journey = await JourneyService.getJourneyForEdit(id);
+            const journey = await JourneyService.getJourneyById(id);
 
             if (!journey) {
                 return res.status(404).json({ message: 'Jornada não encontrada' });

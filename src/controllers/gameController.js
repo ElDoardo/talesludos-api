@@ -1,5 +1,4 @@
 const { GameService } = require('../services');
-const { verifyToken } = require('../middlewares/authMiddleware');
 
 const GameController = {
     async edit(req, res) {
@@ -21,7 +20,6 @@ const GameController = {
             });
         }
     },
-
     async update(req, res) {
         try {
             const { id } = req.params; // id = journeyId

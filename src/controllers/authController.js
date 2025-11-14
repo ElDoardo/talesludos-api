@@ -43,47 +43,24 @@ const AuthController = {
             })
         }
     },
-    async validatePasswordReset(req, res) {
-        try {
-            const token = req.body.token;
-            const passwordReset = PasswordResetService.findByToken(token);
-            if(!passwordReset){
-                res.status(404).json({
-                    error: "Token não encontrado"
-                })
-            }
-            res.status(200).json({
-                data: {email: passwordReset.email, token: token}
-            })
-        } catch (error) {
-             res.status(404).json({
+    async resetPassword(req, res){
+        const {token, email, password} = req.body;
+        const passwordReset = await PasswordResetService.findByToken(token);
+        if(!passwordReset){
+            res.status(404).json({
                 error: "Token não encontrado"
             })
         }
-    },
-    async resetPassword(req, res){
-        
-        try{
-            const {token, email, password} = req.body;
-            const passwordReset = await PasswordResetService.findByToken(token);
-            if(!passwordReset){
-                res.status(404).json({
-                    error: "Token não encontrado"
-                })
-            }
-            const user = await UserService.findByEmail(email);
-            if(!user){
-                res.status(404).json({
-                    error: "Usuário não encontrado"
-                })
-            }
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const newUser = await UserService.updateUser(user.id, { password: hashedPassword });
-            await PasswordResetService.delete(passwordReset.id);
-            res.status(200).json({ data: newUser});
-        }catch{
-            // res.status(400).json({ message: error.message });
+        const user = await UserService.findByEmail(email);
+        if(!user){
+            res.status(404).json({
+                error: "Usuário não encontrado"
+            })
         }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = await UserService.updateUser(user.id, { password: hashedPassword });
+        await PasswordResetService.delete(passwordReset.id);
+        res.status(200).json({ data: newUser});
     },
     async logout(req, res) {
         try {
