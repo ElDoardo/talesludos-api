@@ -52,7 +52,6 @@ class GameServiceImpl extends GameService {
 
         const root = process.cwd(); // pasta raiz do projeto
 
-        // === destinos absolutos ===
         const basePath = path.join(root, 'storage', 'games', String(userId), String(journeyId));
         const basePathImage = path.join(root, 'storage', 'games', String(userId));
         const gamePath = path.join(basePath, 'Game1');

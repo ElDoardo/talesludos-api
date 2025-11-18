@@ -74,7 +74,6 @@ class JourneyController {
             stream.on('error', next);
             stream.pipe(res);
 
-            // limpa o arquivo temporário ao terminar o envio
             res.on('finish', () => fs.unlink(filePath, () => {}));
         } catch (err) {
             next(err);
@@ -128,7 +127,6 @@ class JourneyController {
                 user_id: userId
             };
 
-            // Se foi enviado um novo arquivo, atualiza o imagePath
             if (req.file) {
                 journeyData.imagePath = `${userId.toString()}/${req.file.filename}`
             }
@@ -180,27 +178,23 @@ class JourneyController {
         }
     }
 
-    // controllers/JourneyController.js
     async sendImage(req, res) {
         try {
             const userId = String(req.params.userId || req.params.id || '');
             const fileName = String(req.params.fileName || req.params.file || '');
 
-            // validações simples
             if (!/^\d+$/.test(userId)) {
                 return res.status(400).json({ message: 'userId inválido' });
             }
             if (!fileName || fileName.includes('..') || path.isAbsolute(fileName)) {
                 return res.status(400).json({ message: 'nome de arquivo inválido' });
             }
-            // caminho absoluto até a imagem
             const absPath = path.join(process.cwd(), 'storage', 'games', userId, 'img', fileName);
 
             if (!fs.existsSync(absPath)) {
                 return res.status(404).json({ message: 'Imagem não encontrada' });
             }
 
-            // cache (opcional)
             res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
             return res.sendFile(absPath);

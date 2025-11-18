@@ -10,10 +10,8 @@ const areas = [
 
 const seedAreas = async () => {
     try {
-        // Verifica se já existem áreas no banco de dados
         const existingAreas = await Area.findAll();
         if (existingAreas.length === 0) {
-            // Se não houver áreas, insere as áreas pré-definidas
             await Area.bulkCreate(areas);
             console.log('Áreas inseridas com sucesso!');
         } else {

@@ -53,7 +53,6 @@ const PORT = process.env.PORT || 3000;
 (async () => {
   try {
     await seedAreas();
-    console.log('Banco de dados verificado');
   } catch (e) {
     console.error('Erro ao verificar banco de dados:', e);
   }

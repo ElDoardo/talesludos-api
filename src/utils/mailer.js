@@ -16,12 +16,12 @@ const nodemailer = require("nodemailer");
         const resetLink = `http://localhost:8080/reset-password/${passwordResetData.token}`;
 
         let transporter = nodemailer.createTransport({
-            host: "in-v3.mailjet.com", // Replace with your SMTP host
-            port: 587, // Or 465 for SMTPS
-            secure: false, // true for 465, false for other ports
+            host: "in-v3.mailjet.com", // trocar para SMTP Google ou criar conta com email oficial no Mailjet.
+            port: 587, 
+            secure: false,
             auth: {
-                user: "a21700bdfb9870a4899bd27e403e1852", // Your email address
-                pass: "6e79a58d2a2cc58cb97a333e0888416b", // Your email password or app password
+                user: "12d3ac0fb34a48644dfa21363348b776", // API Key fornecida por Mailjet
+                pass: "7eb020c5e91c939f3f2f1ef554a600d4", // Secret Key fornecida por Mailjet
             },
         });
 
@@ -49,23 +49,21 @@ const nodemailer = require("nodemailer");
         `;
 
         const info = await transporter.sendMail({
-            from: '"Servidor Local" <alves2075@gmail.com>',
+            from: '"Servidor Local" <eduardo.rocha@sou.unifal-mg.edu.br>',
             to: passwordResetData.email,
             subject: "Recuperação de Senha",
             html: htmlTemplate,
         });
-
-        console.log("Email enviado (capturado pelo MailDev):", info.messageId);
     }
 
     async function sendContactEmail({ name, email, message }) {
         let transporter = nodemailer.createTransport({
-            host: "in-v3.mailjet.com", // Replace with your SMTP host
-            port: 587, // Or 465 for SMTPS
-            secure: false, // true for 465, false for other ports
+            host: "in-v3.mailjet.com", // trocar para SMTP Google ou criar conta com email oficial no Mailjet.
+            port: 587, 
+            secure: false,
             auth: {
-                user: "a21700bdfb9870a4899bd27e403e1852", // Your email address
-                pass: "6e79a58d2a2cc58cb97a333e0888416b", // Your email password or app password
+                user: "12d3ac0fb34a48644dfa21363348b776", // API Key fornecida por Mailjet
+                pass: "7eb020c5e91c939f3f2f1ef554a600d4", // Secret Key fornecida por Mailjet
             },
         });
 
@@ -80,14 +78,12 @@ const nodemailer = require("nodemailer");
         `;
 
         const info = await transporter.sendMail({
-            from: '"Tales Ludos" <alves2075@gmail.com>',
-            to: "alves2075@gmail.com",
+            from: '"Tales Ludos" <eduardo.rocha@sou.unifal-mg.edu.br>',
+            to: "eduardo.rocha@sou.unifal-mg.edu.br",
             replyTo: email,
             subject: `Contato via site - ${name}`,
             html: htmlTemplate,
         });
-
-        console.log("Email enviado (capturado pelo MailDev):", info.messageId);
     }
 
 module.exports = { sendResetPasswordEmail, sendContactEmail };

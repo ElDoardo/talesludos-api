@@ -3,11 +3,10 @@ const path = require('path');
 const he = require('he');
 
 async function ensureDirectoryExists(dirPath) {
-    const absPath = path.resolve(dirPath);   // garante absoluto, sem duplicar
+    const absPath = path.resolve(dirPath);
     await fs.mkdir(absPath, { recursive: true });
 }
 
-// Gerar index.html
 async function generateGameIndex({ folder, imageName }) {
     const fullPath = path.resolve(folder);
     await ensureDirectoryExists(fullPath);
@@ -40,9 +39,8 @@ async function generateGameIndex({ folder, imageName }) {
     await fs.writeFile(path.join(fullPath, 'index.html'), content);
 }
 
-// Gerar game.js
 async function generateGameScript({ folder, title, description, marks, links, scenes, challenges }) {
-    const configPath = path.join(folder, 'config');   // ✅ não junta __dirname aqui
+    const configPath = path.join(folder, 'config');
     await ensureDirectoryExists(configPath);
 
     const content = `

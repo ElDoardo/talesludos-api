@@ -10,15 +10,11 @@ const upload = require('./config/multer');
 
 const router = express.Router();
 
-// Rotas públicas
+// Rotas Autenticação
 router.post('/auth/register', UserController.register);
 router.post('/auth/login', AuthController.login);
 router.post('/auth/forgotpassword', AuthController.forgotPassword);
 router.post('/auth/resetpassword/', AuthController.resetPassword);
-router.get('/areas', AreaController.index);
-router.post('/submit', ContactController.submit);
-
-// Rotas protegidas
 router.post('/auth/logout', verifyToken, AuthController.logout);
 
 // Rotas de Game
@@ -43,5 +39,9 @@ router.post('/journey/update/:id',
   JourneyController.update
 );
 router.delete('/journey/destroy/:id', verifyToken, JourneyController.destroy);
+
+//Outras
+router.get('/areas', AreaController.index);
+router.post('/submit', ContactController.submit);
 
 module.exports = router;

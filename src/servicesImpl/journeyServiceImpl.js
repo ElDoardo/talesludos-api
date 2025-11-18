@@ -61,7 +61,6 @@ class JourneyServiceImpl extends JourneyService {
         const baseDir = path.join(__dirname, '../../storage/games', String(userId), String(journeyId));
         const gamePath = path.join(baseDir, 'Game1');
 
-        // nome único pro zip, evita conflito em concorrência
         const zipPath = path.join(baseDir, `jornada-${journeyId}-${Date.now()}.zip`);
 
         try {
@@ -70,7 +69,6 @@ class JourneyServiceImpl extends JourneyService {
             throw new Error('Arquivos do jogo não encontrados');
         }
 
-        // garante pasta
         await fsp.mkdir(baseDir, { recursive: true });
 
         const output = fs.createWriteStream(zipPath);
@@ -88,8 +86,6 @@ class JourneyServiceImpl extends JourneyService {
     }
 
     async processBase64Image(base64Data, userId) {
-        console.log("processBase64Image: " + base64Data);
-        // Verifica se é uma string base64 válida
         const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
         if (!matches) {
             throw new Error('Formato de imagem inválido');
@@ -101,12 +97,10 @@ class JourneyServiceImpl extends JourneyService {
         const fullPath = path.join(folderPath, filename);
         const relativePath = `/games/${userId}/img/${filename}`;
 
-        // Cria o diretório se não existir
         if (!fs.existsSync(folderPath)) {
             fs.mkdirSync(folderPath, { recursive: true });
         }
 
-        // Escreve o arquivo
         await fs.promises.writeFile(
             fullPath,
             matches[2],
@@ -119,7 +113,6 @@ class JourneyServiceImpl extends JourneyService {
     async createJourney(journeyData) {
         const journey = await JourneyRepository.create(journeyData);
 
-        // Cria um jogo vazio associado
         await GameRepository.create({
             journey_id: journey.id,
             marks: "{\"coords\":[],\"nextMark\":1}",
@@ -138,7 +131,6 @@ class JourneyServiceImpl extends JourneyService {
             throw new Error('Jornada não encontrada');
         }
 
-        // Remove a imagem antiga se uma nova foi enviada
         if (journeyData.imagePath && journey.imagePath) {
             const oldImagePath = path.join(__dirname, `../../${journey.imagePath}`);
             if (fs.existsSync(oldImagePath)) {
@@ -156,7 +148,6 @@ class JourneyServiceImpl extends JourneyService {
             throw new Error('Jornada não encontrada');
         }
 
-        // Remove a imagem associada
         if (journey.imagePath) {
             const imagePath = path.join(__dirname, `../../${journey.imagePath}`);
             if (fs.existsSync(imagePath)) {
@@ -164,7 +155,6 @@ class JourneyServiceImpl extends JourneyService {
             }
         }
 
-        // Remove os arquivos do jogo
         const gamePath = path.join(__dirname, `../../storage/games/${journey.user_id}/${journey.id}`);
         if (fs.existsSync(gamePath)) {
             fs.rmSync(gamePath, { recursive: true });

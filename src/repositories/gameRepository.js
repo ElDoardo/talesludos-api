@@ -14,17 +14,14 @@ class GameRepository {
             throw new Error('Jogo não encontrado');
         }
         
-        // Garante que os campos sejam stringificados
         const dataToUpdate = {
             marks: gameData.marks,
             links: gameData.links,
             scenes: gameData.scenes,
             challenges: gameData.challenges
         };
-        console.log("----game update----");
-        console.log(game);
         await game.update(dataToUpdate);
-        return game; // Retorna o jogo atualizado
+        return game;
     }
 
     async findByJourneyId(journeyId) {
